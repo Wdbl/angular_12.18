@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<script src="../../js/angular.min.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body ng-app="app" ng-controller="ctr">
+		        商品名称<input type="text" ng-model="name"/><br />
+			商品名称：<select name="" ng-model="selc">
+				<option value="水果">水果</option>
+				<option value="蔬菜">蔬菜</option>
+				<option value="零食">零食</option>
+			</select><br />
+			商品单价<input type="text" ng-model="price"/><br />
+			商品logo<input type="text" ng-model="logo"/><br />
+			<button ng-click="add()">提交</button><br />
+			<input type="text" ng-model="search.name"/>
+			<button ng-click="all()">全部</button>
+			<button ng-click="tab(item)" ng-repeat="(index,item) in arr | my track by $index">{{item}}</button>
+			<button ng-click="sum='price';bol=!bol">按照价格{{bol?"由高到低":"由低到高"}}排序</button>
+			<table border="" cellspacing="" cellpadding="">
+				<tr>
+					<th>商品名称</th>
+					<th>商品种类</th>
+					<th>商品单价</th>
+					<th>商品logo</th>
+					<th>上架时间</th>
+					<th>操作</th>
+				</tr>
+				<tbody>
+					<tr ng-repeat="(index,item) in arr |filter : search | limitTo : 10 | orderBy : sum : bol track by $index">
+						<td>{{item.name}}</td>
+						<td>{{item.selc}}</td>
+						<td>{{item.price | currency : "￥"}}</td>
+						<td>{{item.logo}}</td>
+						<td>{{item.time | date : "yyyy-MM-dd HH：mm：ss"}}</td>
+						<td ng-click="del(item._id)">删除</td>
+					</tr>
+				</tbody>
+			</table>
+	</body>
+	<script type="text/javascript">
+		var app=angular.module("app",[]);
+		app.controller("ctr",["$scope","$http",function($scope,$http){
+			$scope.arr=[];
+			$scope.search={};
+			$scope.sum="";
+			$scope.bol=false;
+			
+			//渲染
+			$scope.inpt1=function(){
+			   $http({
+			   	method:"get",
+			   	url:"http://localhost:8080/msg",
+			   }).then(res=>{
+//					console.log(res)
+					$scope.arr=res.data;
+				})
+			}
+			$scope.inpt1()
+			
+			//添加
+			$scope.add=function(){
+				$http({
+					method:"get",
+					url:"http://localhost:8080/add",
+					params:{
+						name:$scope.name,
+						selc:$scope.selc,
+						price:$scope.price,
+						logo:$scope.logo,
+						time:new Date().getTime()
+					}
+				}).then(res=>{
+//					console.log(res)
+					$scope.inpt1()
+					
+				})
+			}
+			
+			//删除
+			$scope.del=function(id){
+				$http({
+					method:"get",
+					url:"http://localhost:8080/del",
+					params:{
+						id:id
+					}
+				}).then(res=>{
+//					console.log(res)
+					$scope.inpt1()
+				})
+			}
+			
+			//tab
+			$scope.tab=function(temp){
+				$scope.search.selc=temp;
+			}
+			//全部
+			$scope.all=function(){
+				$scope.search.selc="";
+			}
+		}])
+		//自定义
+		app.filter("my",function(){
+			return function(arr){
+				var arr2=[];
+				for (var i = 0; i < arr.length; i++) {
+					if (arr2.indexOf(arr[i].selc)==-1) {
+						arr2.push(arr[i].selc)
+					}
+				}
+				return arr2;
+			}
+		})
+	</script>
+</html>
